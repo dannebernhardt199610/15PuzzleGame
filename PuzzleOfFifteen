@@ -1,0 +1,166 @@
+package com.company;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.Arrays;
+
+
+public class PuzzleOfFifteen extends JFrame {
+
+    private JButton[][] buttons = new JButton[4][4];
+    private static final int SIZE = 4 * 4;
+    private final String[] WIN = new String[SIZE-1];
+
+    // Skapar själva panelen
+    private PuzzleOfFifteen() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridLayout(4,4));
+        Container container = getContentPane ();
+        container.add(panel, BorderLayout.CENTER);
+        container.add(NewGameButton(), BorderLayout.SOUTH);
+
+        // Visar i vilken ordning man vinner.
+        for (int i = 1; i < SIZE; i++) {
+            WIN[i - 1] = Integer.toString(i);
+        }
+
+        JOptionPane.showMessageDialog(null, "Win State: " + Arrays.asList(WIN) );
+
+        // Skapar 16 JButtons.
+        for (int i = 0; i <4; i++) {
+            for (int j = 0; j < 4; j++) {
+                JButton num = new JButton();
+                buttons[i][j] = num;
+                panel.add(num);
+                num.setFont(new Font("SansSerif", Font.BOLD, 35));
+
+            }
+        }
+
+
+        // Actionlistener till alla knappar.
+        ButtonListener pushed = new ButtonListener();
+
+        for (int i = 0; i < 4; i++ ) {
+            for (int j = 0; j < 4; j++) {
+                buttons [i][j].addActionListener (pushed);
+            }
+        }
+    }
+
+    // New Game button som gör ett nytt spel.
+    private JButton NewGameButton() {
+        JButton button = new JButton("New Game");
+        button.setFont(new Font("SansSerif", Font.BOLD, 25));
+        button.setBackground(Color.red);
+        button.addActionListener(e -> RANDOMIZE());
+        return button;
+
+    }
+    // Kollar 1-15 om dem är i rätt ordning.
+    private boolean isFinished() {
+        for (int index = WIN.length - 1; index >= 0; index--) {
+            String number = buttons[index / 4][index % 4].getText();
+            if (!number.equals(WIN[index])) {
+                return false;       // Om något inte är justerat rätt.
+
+            }
+        }
+        return true;
+    }
+    // Randomize, slumpar 16 buttons.
+    private void RANDOMIZE () {
+
+        // Fyller rutorna med random nummer och håller koll på att dem visas.
+        boolean  [] used = new boolean [16];
+
+        //  Genererar ett random nummer mellan 1-15.
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                int val = (int)(16*Math.random ());
+
+                while (used [val]) {
+                    val = (int) (16 * Math.random ());
+                }
+                //  Detta värde har nu applicerats.
+                used [val] = true;
+
+                //  Lämnar en ruta och definerar den med hjälp av vit färg.
+                //Ifall rutan inte är = med 0 så fylls den med orange.
+                if (val !=0) {
+                    buttons[i][j].setText( "" + val);
+                    buttons[i][j].setBackground (Color.ORANGE);
+                }
+                // annars fylls den med white som definerar den tomma rutan.
+                else
+                    buttons[i][j].setBackground (Color.WHITE);
+            }
+        }
+    }
+    // Gör att man kan flytta runt buttons i panelen.
+    public void moveSquare (int i, int j) {
+        JButton empty = null;
+        // letar ifall den tomma rutan är intill den valda rutan.
+        // "grannarna" av (i, j) är (i+1, j), (i-1, j), (i, j+1) och (i, -j)
+        // så länge all mängder är mellan 0 och 3.
+
+        if (i < 3 && buttons [i+1][j].getBackground() == Color.WHITE)
+            empty = buttons [i+1][j];
+        if (i > 0 && buttons [i-1][j].getBackground() == Color.WHITE)
+            empty = buttons [i -1][j];
+        if (j < 3 && buttons [i][j+1].getBackground() == Color.WHITE)
+            empty = buttons [i][j+1];
+        if (j > 0 && buttons [i][j -1].getBackground() == Color.WHITE)
+            empty = buttons [i][j -1];
+
+        if (empty == null) return;    //  Spelaren tryckte på en knapp som inte går att flytta.
+
+        else { // Bestämmer knapparnas utseende efter man tryckt på dem. Tomma rutan måste vara samma färg som if statements ovanför.
+            empty.setText (buttons [i][j].getText ());
+            empty.setBackground (Color.ORANGE);
+            buttons [i][j].setText("");
+            buttons [i][j].setBackground (Color.WHITE);
+
+
+
+        }
+    }
+
+    class ButtonListener implements ActionListener
+    {
+        public void actionPerformed(ActionEvent e)
+        {
+            // Kollar ifall man klarat spelet.
+            if (isFinished()) {
+                JOptionPane.showMessageDialog(null, "You Win The Game.");
+            }
+            Object square = e.getSource( );
+            //  Letar igenom buttons för den som blev tryckt på.
+            outer: for (int i = 0; i < 4; i++ )
+            {
+                for (int j = 0; j < 4; j++)
+                {
+                    if (buttons [i][j] == square)
+                    {
+                        moveSquare (i, j);
+                        break outer;
+                        //Indikerar att breaka loopen.
+
+                    }
+                }
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+       PuzzleOfFifteen game = new PuzzleOfFifteen();
+        game.setTitle ("Puzzle of 15");
+        game.setSize( 1000,  1000);
+        game.setVisible( true);
+        game.setLocationRelativeTo(null);
+        game.RANDOMIZE ();
+        game.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE);
+
+    }
+}
